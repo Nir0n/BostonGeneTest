@@ -26,9 +26,13 @@ SECRET_KEY = '-v%5!v$qt0@s!%xfers87eb5&$^mr-^g1*-kuo(eary$jc*f9h'
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
-# CSRF_COOKIE_SECURE = False
 
-# Application definition
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST_USER = 'mbeinformer@gmail.com'
+EMAIL_HOST_PASSWORD = 'Q567890w'
+EMAIL_PORT = 587
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -113,6 +117,7 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
+
 
 
 # Static files (CSS, JavaScript, Images)

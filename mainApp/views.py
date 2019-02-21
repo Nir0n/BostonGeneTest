@@ -7,22 +7,29 @@ from os.path import basename
 from urllib.request import urlretrieve, urlcleanup
 from urllib.parse import urlsplit
 import hashlib
+from django.core.mail import EmailMessage
 
 class Submit(View):
     def post(self, request):
         try:
             url = request.GET["url"]
             task = Task.objects.create(url=url,state="task in progress")
-            if request.GET["email"]:
+            try:
                 task.email=request.GET["email"]
+            except:
+                pass
+
             downloadFile(task)
             task.md5=getMd5(task.data)
             task.state="complete"
-            sendEmail(task)
+            if task.email:
+                email = EmailMessage(task.url, task.md5, to=[task.email])
+                email.send()
         except Exception as exc:
             task.state="task failed"
         task.save()
-        return HttpResponse(task.id)
+        param=[" id: ",task.id]
+        return HttpResponse(param,status=200)
 
 def downloadFile(task):
     try:
@@ -30,20 +37,6 @@ def downloadFile(task):
         task.data.save(basename(urlsplit(task.url).path), File(open(tempname, 'rb')))
     finally:
         urlcleanup()
-
-    # file_full_path = "/tmp/{0}".format(filename)
-    # response = StreamingHttpResponse((line for line in open(file_full_path, 'r')))
-    # response['Content-Disposition'] = "attachment; filename={0}".format(filename)
-    # response['Content-Length'] = os.path.getsize(file_full_path)
-    # return response
-    # req = requests.get(task.url, stream=True)
-    # if req.status_code == 200:
-    #     with open(path, 'wb') as f:
-    #         for chunk in req.iter_content(chunk):
-    #             f.write(chunk)
-    #         f.close()
-    #     return path
-    # raise Exception('Given url is return status code:{}'.format(req.status_code))
 
 def getMd5(file):
     md5=hashlib.md5()
@@ -56,9 +49,11 @@ class Check(View):
     def get(self, request):
         try:
             task_id= request.GET["id"]
-            task=Task.objects.filter(id=task_id)
+            task=Task.objects.filter(pk=task_id).first()
             if task.state=="complete":
-                return HttpResponse(task.state,task.md5,task.url)
+                param=[" state: ",task.state,", md5: ",task.md5,", url: ",task.url]
+                return HttpResponse(param,status=200)
         except:
-            raise Exception("Such id doesn't exist in the system")
-        return HttpResponse(task.state)
+            return HttpResponse("Such id doesn't exist in the system",status=404)
+        param=[" state: ",task.state]
+        return HttpResponse(param,status=200)
