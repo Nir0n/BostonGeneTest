@@ -1,6 +1,5 @@
-import os
 from django.views import View
-from django.http import StreamingHttpResponse,HttpResponse
+from django.http import HttpResponse
 from mainApp.models import Task
 from django.core.files import File
 from os.path import basename
@@ -8,6 +7,7 @@ from urllib.request import urlretrieve, urlcleanup
 from urllib.parse import urlsplit
 import hashlib
 from django.core.mail import EmailMessage
+from threading import Thread
 
 class Submit(View):
     def post(self, request):
@@ -18,18 +18,27 @@ class Submit(View):
                 task.email=request.GET["email"]
             except:
                 pass
-
-            downloadFile(task)
-            task.md5=getMd5(task.data)
-            task.state="complete"
-            if task.email:
-                email = EmailMessage(task.url, task.md5, to=[task.email])
-                email.send()
+            thread=Thread(target=createTask,args=(task,))
+            thread.daemon = True
+            thread.start()
         except Exception as exc:
             task.state="task failed"
         task.save()
         param=[" id: ",task.id]
         return HttpResponse(param,status=200)
+
+def createTask(task):
+    try:
+        downloadFile(task)
+        task.md5 = getMd5(task.data)
+        task.state = "complete"
+        if task.email:
+            email = EmailMessage(task.url, task.md5, to=[task.email])
+            email.send()
+    except:
+        task.state="task failed"
+    task.save()
+    return 0
 
 def downloadFile(task):
     try:
