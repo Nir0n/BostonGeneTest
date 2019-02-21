@@ -2,6 +2,8 @@
 Python 3.7.2
 
 virtualenv
+
+pip
 # SetUp
 open terminal
 
