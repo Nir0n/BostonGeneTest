@@ -3,11 +3,12 @@ from django.http import HttpResponse
 from mainApp.models import Task
 from django.core.files import File
 from os.path import basename
-from urllib.request import urlretrieve, urlcleanup
 from urllib.parse import urlsplit
 import hashlib
 from django.core.mail import EmailMessage
 from threading import Thread
+import requests
+from tempfile import TemporaryFile
 
 class Submit(View):
     def post(self, request):
@@ -21,7 +22,7 @@ class Submit(View):
             thread=Thread(target=createTask,args=(task,))
             thread.daemon = True
             thread.start()
-        except Exception as exc:
+        except:
             task.state="task failed"
         task.save()
         param=[" id: ",task.id]
@@ -41,11 +42,13 @@ def createTask(task):
     return 0
 
 def downloadFile(task):
-    try:
-        tempname, _ = urlretrieve(task.url)
-        task.data.save(basename(urlsplit(task.url).path), File(open(tempname, 'rb')))
-    finally:
-        urlcleanup()
+    with TemporaryFile() as tf:
+        r = requests.get(task.url, stream=True)
+        for chunk in r.iter_content(chunk_size=4096):
+            tf.write(chunk)
+
+        tf.seek(0)
+        task.data.save(basename(urlsplit(task.url).path), File(tf))
 
 def getMd5(file):
     md5=hashlib.md5()
