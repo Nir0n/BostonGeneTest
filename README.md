@@ -1,8 +1,11 @@
 # Requirements
 Python 3.7.2
+
 virtualenv
 # SetUp
 open terminal
+
+commands for terminal below:
 
 git clone https://github.com/man-with-a-plan/BostonGeneTest.git
 
@@ -17,6 +20,8 @@ pip install -r requirements.txt
 python manage.py runserver
 # Usage
 open another terminal
+
+commands for terminal below:
 
 input: "curl -X POST '127.0.0.1:8000/submit/?url=http://www.orimi.com/pdf-test.pdf&email=example@gmail.com'"
 
