@@ -1,4 +1,6 @@
 # Requirements
+git
+
 Python 3.7.2
 
 virtualenv
